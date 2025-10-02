@@ -4,14 +4,6 @@
 #   sudo ./hotspot-mitm.sh SSID PASSWORD
 #   sudo ./hotspot-mitm.sh --clear
 #
-# Что делает:
-# - ставит hostapd, dnsmasq, mitmproxy (pacman) если не установлены
-# - создает hotspot на первом найденном WiFi-интерфейсе
-# - раздаёт DHCP клиентам (10.0.0.10-200)
-# - включает NAT через внешний интерфейс (если есть)
-# - запускает mitmweb в transparent режиме и делает REDIRECT 80/443 -> 8080
-# - сохраняет состояние в /var/run/myhotspot-* для корректного удаления
-#
 # настраивайте и используйте аккуратно. Только для легального тестирования.
 
 set -euo pipefail

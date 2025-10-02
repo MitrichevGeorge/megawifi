@@ -26,17 +26,14 @@ OUT_IF_FILE="$STATE_DIR/out_if"
 SAVED_AUTOCONN="$STATE_DIR/autoconnect_before.txt"
 MITM_TOKEN_FILE="$STATE_DIR/mitm_token"
 
-# helper
 die(){ echo "ERROR: $*"; exit 1; }
 info(){ echo "==> $*"; }
 
-# ensure root
 if [ "$(id -u)" -ne 0 ]; then
   echo "Need root: re-running with sudo..."
   exec sudo bash "$0" "$@"
 fi
 
-# parse args
 if [ $# -eq 0 ]; then
   cat <<EOF
 Usage:
@@ -121,7 +118,6 @@ rsn_pairwise=CCMP
 EOF
   info "Создал hostapd конфиг: $HOSTAPD_CONF"
 
-  # dnsmasq conf
   cat > "$DNSMASQ_CONF" <<EOF
 interface=$wlan
 bind-interfaces
@@ -133,12 +129,12 @@ log-facility=$STATE_DIR/dnsmasq.log
 EOF
   info "Создал dnsmasq конфиг: $DNSMASQ_CONF"
 
-  # start hostapd
+  
   info "Запускаю hostapd..."
   hostapd "$HOSTAPD_CONF" >"$STATE_DIR/hostapd.log" 2>&1 &
   local hostapd_pid=$!
   sleep 0.5
-  # check if running
+  
   if ! kill -0 "$hostapd_pid" 2>/dev/null; then
     echo "hostapd не запустился — посмотрим лог:"
     tail -n 100 "$STATE_DIR/hostapd.log" || true
@@ -147,7 +143,7 @@ EOF
   echo "hostapd PID $hostapd_pid" >> "$PIDS_FILE"
   info "hostapd запущен (PID $hostapd_pid)."
 
-  # start dnsmasq
+  
   info "Запускаю dnsmasq..."
   dnsmasq --conf-file="$DNSMASQ_CONF" --no-daemon >"$STATE_DIR/dnsmasq.log" 2>&1 &
   local dns_pid=$!
@@ -160,7 +156,7 @@ EOF
   echo "dnsmasq PID $dns_pid" >> "$PIDS_FILE"
   info "dnsmasq запущен (PID $dns_pid)."
 
-  # NAT (если есть внешний интерфейс)
+  
   local out_if
   out_if=$(find_out_if)
   if [ -n "$out_if" ]; then
@@ -175,7 +171,7 @@ EOF
     : > "$OUT_IF_FILE"
   fi
 
-  # start mitmproxy (transparent)
+  
   info "Запускаю mitmweb в transparent режиме (порт 8080), web GUI на 8081..."
   mitmweb --mode transparent --listen-port 8080 --web-host 0.0.0.0 --web-port 8081 >"$STATE_DIR/mitmweb.log" 2>&1 &
   local mitm_pid=$!
@@ -203,7 +199,7 @@ EOF
 clear_all() {
   info "Отключаю и удаляю все сервисы и правила, созданные скриптом..."
 
-  # kill pids
+  
   if [ -f "$PIDS_FILE" ]; then
     while read -r line; do
       pid=$(echo "$line" | awk '{print $NF}')
